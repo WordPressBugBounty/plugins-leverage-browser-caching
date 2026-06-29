@@ -12,181 +12,161 @@ if ( ! class_exists( 'Lbrowserc_Core' ) ) {
 	class Lbrowserc_Core {
 
 		/**
-		 * Store htaccess_file, used to store path of htaccess file.
+		 * Absolute path to the .htaccess file.
 		 *
 		 * @var string
 		 */
-		public $htaccess_file;
+		private $htaccess_file;
 
 		/**
-		 * Store unique_string, used to identify codes in htaccess file.
+		 * Unique marker string used to identify the plugin's block in .htaccess.
 		 *
 		 * @var string
 		 */
-		public $unique_string;
+		private $unique_string = 'LBROWSERCSTART';
 
 		/**
-		 * Store htaccess_cntn, used to store htaccess file content.
-		 *
-		 * @var string
-		 */
-		public $htaccess_cntn;
-
-		/**
-		 * Store valid, use to check true false.
-		 *
-		 * @var bool
-		 */
-		public $valid;
-
-		/**
-		 * Store pattern, used to remove plugin code from htaccess file.
-		 *
-		 * @var string
-		 */
-		public $pattern;
-
-		/**
-		 * Store message, used to add admin notice etc.
-		 *
-		 * @var string
-		 */
-		public $message;
-
-		/**
-		 * Store plugin action link.
-		 *
-		 * @var string
-		 */
-		public $custom_link;
-
-		/**
-		 * This will add code, if not found. and also call deactivation_hook
+		 * Constructor — sets up the htaccess path and registers admin notice hooks.
 		 */
 		public function __construct() {
-
 			$this->htaccess_file = wp_normalize_path( ABSPATH . '.htaccess' );
 
-			// Go ahead, if file exist.
-			if ( file_exists( $this->htaccess_file ) ) {
-
-				// Go ahead, if file readable and writable.
-				if ( is_readable( $this->htaccess_file ) && is_writable( $this->htaccess_file ) ) {
-
-					// Check if code already present in htaccess.
-					$this->unique_string 	= 'LBROWSERCSTART';
-					$this->htaccess_cntn 	= file_get_contents( $this->htaccess_file );
-					$this->valid 			= false;
-
-					if ( strpos( $this->htaccess_cntn, $this->unique_string ) !== false ) {
-						$this->valid = true;
-					}
-
-					if ( ! $this->valid ) {
-						// Code does not have in htaccess file. let add them.
-						// Present code + plugin code.
-						$this->htaccess_cntn = $this->htaccess_cntn . $this->code_to_add();
-
-						file_put_contents( $this->htaccess_file, $this->htaccess_cntn );
-						// Welcome.
-					}
-				} else {
-					add_action( 'admin_notices', array( $this, 'no_htaccess_access_notice' ) );
-				}
-			} else {
-				add_action( 'admin_notices', array( $this, 'no_htaccess_notice' ) );
-			}
-			
-			register_deactivation_hook( LBROWSERC_FILE, array( $this, 'remove_code' ) );
-
+			// Show admin notices when .htaccess cannot be found or accessed.
+			add_action( 'admin_notices', array( $this, 'admin_notices' ) );
 		}
 
 		/**
-		 * This will remove code from htaccess, if found.
+		 * Displays admin notices when .htaccess is missing or not accessible.
+		 */
+		public function admin_notices() {
+			if ( ! file_exists( $this->htaccess_file ) ) {
+				$message  = '<div class="notice notice-error"><p>';
+				$message .= __( 'Plugin Leverage Browser Caching: .htaccess file not found. This plugin works only for Apache server. If you are using Apache server, please create it.', 'lbrowserc' );
+				$message .= '</p></div>';
+				echo wp_kses_post( $message );
+			} elseif ( ! is_readable( $this->htaccess_file ) || ! is_writable( $this->htaccess_file ) ) {
+				$message  = '<div class="notice notice-error"><p>';
+				$message .= __( 'Plugin Leverage Browser Caching: .htaccess file is not readable or writable. Please change the file permissions.', 'lbrowserc' );
+				$message .= '</p></div>';
+				echo wp_kses_post( $message );
+			}
+		}
+
+		/**
+		 * Adds browser caching rules to .htaccess on plugin activation.
+		 * Called via register_activation_hook().
+		 */
+		public function add_code() {
+			// Only allow users with sufficient capability to modify server files.
+			if ( ! current_user_can( 'activate_plugins' ) ) {
+				return;
+			}
+
+			// Bail if .htaccess does not exist.
+			if ( ! file_exists( $this->htaccess_file ) ) {
+				return;
+			}
+
+			// Bail if .htaccess is not readable or writable.
+			if ( ! is_readable( $this->htaccess_file ) || ! is_writable( $this->htaccess_file ) ) {
+				return;
+			}
+
+			$htaccess_cntn = file_get_contents( $this->htaccess_file );
+
+			// Do nothing if the plugin block is already present.
+			if ( strpos( $htaccess_cntn, $this->unique_string ) !== false ) {
+				return;
+			}
+
+			// Append the caching block and write back with file locking.
+			$htaccess_cntn .= $this->code_to_add();
+			file_put_contents( $this->htaccess_file, $htaccess_cntn, LOCK_EX );
+		}
+
+		/**
+		 * Removes browser caching rules from .htaccess on plugin deactivation.
+		 * Called via register_deactivation_hook().
 		 */
 		public function remove_code() {
-
-			$this->htaccess_file = wp_normalize_path( ABSPATH . '.htaccess' );
-
-			// Go ahead, if file exist.
-			if ( file_exists( $this->htaccess_file ) ) {
-
-				// Go ahead, if file readable and writable.
-				if ( is_readable( $this->htaccess_file ) && is_writable( $this->htaccess_file ) ) {
-
-					// Check if code already present.
-					$this->unique_string 	= 'LBROWSERCSTART';
-					$this->htaccess_cntn 	= file_get_contents( $this->htaccess_file );
-					$this->valid 			= false;
-
-					if ( strpos( $this->htaccess_cntn, $this->unique_string ) !== false ) {
-						$this->valid = true;
-					}
-
-					if ( $this->valid ) {
-
-						// Code found, remove them.
-						$this->pattern 			= '/#\s?LBROWSERCSTART.*?LBROWSERCEND/s';
-						$this->htaccess_cntn 	= preg_replace( $this->pattern, '', $this->htaccess_cntn );
-						$this->htaccess_cntn 	= preg_replace( "/\n+/","\n", $this->htaccess_cntn );
-
-						file_put_contents( $this->htaccess_file, $this->htaccess_cntn );
-						// Bye Bye.
-					}
-				} else {
-					// Note: no_htaccess_access_notice.
-				}
-			} else {
-				// Note: no_htaccess_notice.
+			// Bail if .htaccess does not exist.
+			if ( ! file_exists( $this->htaccess_file ) ) {
+				return;
 			}
+
+			// Bail if .htaccess is not readable or writable.
+			if ( ! is_readable( $this->htaccess_file ) || ! is_writable( $this->htaccess_file ) ) {
+				return;
+			}
+
+			$htaccess_cntn = file_get_contents( $this->htaccess_file );
+
+			// Do nothing if the plugin block is not present.
+			if ( strpos( $htaccess_cntn, $this->unique_string ) === false ) {
+				return;
+			}
+
+			// Remove the plugin's caching block.
+			$pattern       = '/#\s?LBROWSERCSTART.*?LBROWSERCEND/s';
+			$htaccess_cntn = preg_replace( $pattern, '', $htaccess_cntn );
+
+			// Remove only the extra blank lines left by the removed block (max 2 → 1),
+			// without touching intentional formatting elsewhere in the file.
+			$htaccess_cntn = preg_replace( '/\n{3,}/', "\n\n", $htaccess_cntn );
+
+			file_put_contents( $this->htaccess_file, $htaccess_cntn, LOCK_EX );
 		}
 
 		/**
-		 * Codes to be add.
+		 * Builds and returns the browser caching directives to insert into .htaccess.
+		 *
+		 * Uses a local variable to avoid overwriting the stored .htaccess content.
+		 *
+		 * @return string
 		 */
-		public function code_to_add() {
-			$this->htaccess_cntn  = "\n";
-			$this->htaccess_cntn .= '# LBROWSERCSTART Browser Caching' . "\n";
-			$this->htaccess_cntn .= '<IfModule mod_expires.c>' . "\n";
-			$this->htaccess_cntn .= 'ExpiresActive On' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType image/gif "access 1 year"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType image/jpg "access 1 year"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType image/jpeg "access 1 year"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType image/png "access 1 year"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType image/x-icon "access 1 year"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType text/css "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType text/javascript "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType text/html "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType application/javascript "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType application/x-javascript "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType application/xhtml-xml "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType application/pdf "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresByType application/x-shockwave-flash "access 1 month"' . "\n";
-			$this->htaccess_cntn .= 'ExpiresDefault "access 1 month"' . "\n";
-			$this->htaccess_cntn .= '</IfModule>' . "\n";
-			$this->htaccess_cntn .= '# END Caching LBROWSERCEND' . "\n";
+		private function code_to_add() {
+			$code  = "\n";
+			$code .= '# LBROWSERCSTART Browser Caching' . "\n";
+			$code .= '<IfModule mod_expires.c>' . "\n";
+			$code .= 'ExpiresActive On' . "\n";
 
-			return $this->htaccess_cntn;
-		}
+			// Images.
+			$code .= 'ExpiresByType image/gif "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/jpeg "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/png "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/webp "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/avif "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/svg+xml "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/x-icon "access 1 year"' . "\n";
+			$code .= 'ExpiresByType image/vnd.microsoft.icon "access 1 year"' . "\n";
 
-		/**
-		 * If htaccess is not exists.
-		 */
-		public function no_htaccess_notice() {
-			$this->message = '<div class="error"><p>';
-			$this->message .= __( 'Plugin Leverage Browser Caching: htaccess file not found. This plugin works only for Apache server. If you are using Apace server, please create it.', 'lbrowserc' );
-			$this->message .= '</p></div>';
-			echo wp_kses_post( $this->message );
-		}
+			// Web fonts.
+			$code .= 'ExpiresByType font/woff "access 1 year"' . "\n";
+			$code .= 'ExpiresByType font/woff2 "access 1 year"' . "\n";
+			$code .= 'ExpiresByType font/ttf "access 1 year"' . "\n";
+			$code .= 'ExpiresByType application/font-woff "access 1 year"' . "\n";
+			$code .= 'ExpiresByType application/font-woff2 "access 1 year"' . "\n";
 
-		/**
-		 * If htaccess is not access able.
-		 */
-		public function no_htaccess_access_notice() {
-			$this->message = '<div class="error"><p>';
-			$this->message .= __( 'Plugin Leverage Browser Caching: htaccess file is not readable or writable. Please change permission of htaccess file.', 'lbrowserc' );
-			$this->message .= '</p></div>';
-			echo wp_kses_post( $this->message );
+			// Stylesheets and scripts.
+			$code .= 'ExpiresByType text/css "access 1 month"' . "\n";
+			$code .= 'ExpiresByType text/javascript "access 1 month"' . "\n";
+			$code .= 'ExpiresByType application/javascript "access 1 month"' . "\n";
+			$code .= 'ExpiresByType application/x-javascript "access 1 month"' . "\n";
+
+			// Documents.
+			$code .= 'ExpiresByType text/html "access 1 month"' . "\n";
+			$code .= 'ExpiresByType application/xhtml+xml "access 1 month"' . "\n";
+			$code .= 'ExpiresByType application/pdf "access 1 month"' . "\n";
+
+			// Data and other.
+			$code .= 'ExpiresByType application/json "access 1 month"' . "\n";
+			$code .= 'ExpiresByType application/x-shockwave-flash "access 1 month"' . "\n";
+
+			$code .= 'ExpiresDefault "access 1 month"' . "\n";
+			$code .= '</IfModule>' . "\n";
+			$code .= '# END Caching LBROWSERCEND' . "\n";
+
+			return $code;
 		}
 
 	}
