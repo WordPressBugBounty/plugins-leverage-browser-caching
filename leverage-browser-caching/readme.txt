@@ -1,11 +1,11 @@
 === Leverage Browser Caching ===
 Contributors: rinkuyadav999
-Donate link: https://paypal.me/RinkuYadav
+Donate link: https://lbcache.com
 Tags: browser caching, leverage browser caching, page speed, htaccess, site speed
 Requires at least: 4.0
 Tested up to: 7.0
 Requires PHP: 5.6
-Stable tag: 2.7
+Stable tag: 3.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,20 @@ This plugin directly fixes the "Leverage Browser Caching" or "Serve static asset
 * **Apache web server** with `mod_expires` module enabled.
 * A writable `.htaccess` file in your WordPress root directory.
 * This plugin does **not** work on Nginx or IIS servers.
+
+= Upgrade to Pro =
+
+Get even faster load times and more advanced features with **Leverage Browser Caching Pro**! 
+
+* **Advanced Caching & Compression**: Customizable Cache Durations, GZIP Compression, Cache-Control Headers, Keep-Alive, and ETag Removal.
+* **Code Minification**: Minify CSS, JS, and HTML, plus Delay JavaScript for a massive PageSpeed boost.
+* **Media & Font Optimization**: Lazy Load Images & iFrames, and Google Fonts Optimization.
+* **Database & Site Health**: Database Cleanup, DNS Prefetch, Preload Links, Heartbeat Control, and XML-RPC Disable.
+* **WooCommerce Ready**: Built-in WooCommerce Optimization.
+* **Settings Admin Page**: Easy-to-use interface to manage all features.
+* **Premium Support & Updates**: Get fast, dedicated assistance and regular new features.
+
+[Upgrade to Leverage Browser Caching Pro today!](https://lbcache.com)
 
 == Installation ==
 
@@ -121,6 +135,10 @@ Please open a support topic on the [WordPress.org support forum](https://wordpre
 1. Browser caching rules added to .htaccess after plugin activation.
 
 == Changelog ==
+
+= 3.0 =
+* Code improvements
+* Pro info and link added
 
 = 2.7 =
 * Code improvements: browser caching rules now added only on plugin activation and removed only on deactivation.
@@ -204,6 +222,6 @@ Please open a support topic on the [WordPress.org support forum](https://wordpre
 
 == Upgrade Notice ==
 
-= 2.7 =
+= 3.0 =
 Important update: browser caching rules are now only written to .htaccess on plugin activation and removed on deactivation. Modern MIME types added. Upgrade recommended for all users. Simply deactivate and then activate the plugin for Modern MIME types. 
 
