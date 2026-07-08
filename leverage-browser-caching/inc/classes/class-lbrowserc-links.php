@@ -5,6 +5,11 @@
  * @package Leverage Browser Caching
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'Lbrowserc_Links' ) ) {
 	/**
 	 * Adds custom links to the plugin's row on the Plugins list table.
@@ -44,13 +49,13 @@ if ( ! class_exists( 'Lbrowserc_Links' ) ) {
 			$settings_link = sprintf(
 				'<a href="%s">%s</a>',
 				esc_url( admin_url( 'admin.php?page=lbcache' ) ),
-				esc_html__( 'Settings', 'lbrowserc' )
+				esc_html__( 'Settings', 'leverage-browser-caching' )
 			);
 
 			$upgrade_link = sprintf(
 				'<a href="%s" target="_blank" rel="noopener noreferrer" style="color:#00a32a;font-weight:600;">&#11088; %s</a>',
 				esc_url( $this->upgrade_url ),
-				esc_html__( 'Upgrade to Pro', 'lbrowserc' )
+				esc_html__( 'Upgrade to Pro', 'leverage-browser-caching' )
 			);
 
 			// Prepend Settings so it appears before the default Deactivate link.

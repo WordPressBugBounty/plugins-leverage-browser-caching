@@ -9,6 +9,11 @@
  * @package Leverage Browser Caching
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'Lbrowserc_Notice' ) ) {
 	/**
 	 * Handles the dismissible Upgrade to Pro admin notice.
@@ -49,6 +54,7 @@ if ( ! class_exists( 'Lbrowserc_Notice' ) ) {
 		public function __construct() {
 			add_action( 'admin_notices', array( $this, 'show_notice' ) );
 			add_action( 'wp_ajax_' . $this->ajax_action, array( $this, 'handle_dismiss' ) );
+			add_action( 'upgrader_process_complete', array( $this, 'reset_on_update' ), 10, 2 );
 		}
 
 		/**
@@ -74,13 +80,13 @@ if ( ! class_exists( 'Lbrowserc_Notice' ) ) {
 			?>
 			<div class="notice notice-info is-dismissible" id="lbrowserc-upgrade-notice">
 				<p>
-					<strong><?php esc_html_e( '⭐ Unlock the full power of Leverage Browser Caching!', 'lbrowserc' ); ?></strong>
+					<strong><?php esc_html_e( '⭐ Unlock the full power of Leverage Browser Caching!', 'leverage-browser-caching' ); ?></strong>
 					<br>
 					<?php
 					printf(
-						/* translators: %s: upgrade link HTML */
 						wp_kses(
-							__( 'You are using the free version. Upgrade to <strong>Leverage Browser Caching Pro</strong> to unlock GZIP compression, CSS/JS minification, lazy loading, HTML minification, and much more. %s', 'lbrowserc' ),
+							/* translators: %s: upgrade link HTML */
+							__( 'You are using the free version. Upgrade to <strong>Leverage Browser Caching Pro</strong> to unlock GZIP compression, CSS/JS minification, lazy loading, HTML minification, and much more. %s', 'leverage-browser-caching' ),
 							array(
 								'strong' => array(),
 								'a'      => array(
@@ -91,7 +97,7 @@ if ( ! class_exists( 'Lbrowserc_Notice' ) ) {
 								),
 							)
 						),
-						'<a href="' . esc_url( $this->upgrade_url ) . '" target="_blank" rel="noopener noreferrer" style="color:#00a32a;font-weight:600;text-decoration:none;">&#11088; ' . esc_html__( 'Upgrade to Pro', 'lbrowserc' ) . '</a>'
+						'<a href="' . esc_url( $this->upgrade_url ) . '" target="_blank" rel="noopener noreferrer" style="color:#00a32a;font-weight:600;text-decoration:none;">&#11088; ' . esc_html__( 'Upgrade to Pro', 'leverage-browser-caching' ) . '</a>'
 					);
 					?>
 				</p>
@@ -133,6 +139,20 @@ if ( ! class_exists( 'Lbrowserc_Notice' ) ) {
 		 */
 		public function reset_notice() {
 			delete_option( $this->option_key );
+		}
+
+		/**
+		 * Resets the notice when the plugin is updated.
+		 *
+		 * @param WP_Upgrader $upgrader_object WP_Upgrader instance.
+		 * @param array       $options         Array of bulk item update data.
+		 */
+		public function reset_on_update( $upgrader_object, $options ) {
+			if ( 'update' === $options['action'] && 'plugin' === $options['type'] && isset( $options['plugins'] ) ) {
+				if ( in_array( LBROWSERC_BASE_FILE, $options['plugins'], true ) ) {
+					$this->reset_notice();
+				}
+			}
 		}
 
 	}

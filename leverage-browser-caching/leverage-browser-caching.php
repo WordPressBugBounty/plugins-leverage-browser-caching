@@ -2,12 +2,12 @@
 /**
  * Plugin Name:	Leverage Browser Caching
  * Description:	Speed up WordPress with browser caching. Automatically adds expiry headers for images, CSS, JS & fonts via .htaccess Zero config (Apache only)
- * Version:		3.0
+ * Version:		3.1
  * Author:		Rinku Yadav
  * Author URI:	https://lbcache.com
  * License:		GPLv2 or later
  * License URI:	http://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: lbrowserc
+ * Text Domain: leverage-browser-caching
  *
  * @package     Leverage Browser Caching
  */
@@ -46,16 +46,17 @@ $lbrowserc = new Lbrowserc_Core();
 register_activation_hook( LBROWSERC_FILE, array( $lbrowserc, 'add_code' ) );
 register_deactivation_hook( LBROWSERC_FILE, array( $lbrowserc, 'remove_code' ) );
 
-// Load admin-only classes: plugin action links, dismissible notice, and admin page.
+// Load dismissible notice class globally so its deactivation hook can fire properly.
+require_once LBROWSERC_PATH . 'inc/classes/class-lbrowserc-notice.php';
+$lbrowserc_notice = new Lbrowserc_Notice();
+
+// Clear dismissed state on deactivation so notice reappears after re-activation.
+register_deactivation_hook( LBROWSERC_FILE, array( $lbrowserc_notice, 'reset_notice' ) );
+
+// Load admin-only classes: plugin action links, and admin page.
 if ( is_admin() ) {
 	require_once LBROWSERC_PATH . 'inc/classes/class-lbrowserc-links.php';
 	new Lbrowserc_Links();
-
-	require_once LBROWSERC_PATH . 'inc/classes/class-lbrowserc-notice.php';
-	$lbrowserc_notice = new Lbrowserc_Notice();
-
-	// Clear dismissed state on deactivation so notice reappears after re-activation.
-	register_deactivation_hook( LBROWSERC_FILE, array( $lbrowserc_notice, 'reset_notice' ) );
 
 	require_once LBROWSERC_PATH . 'inc/classes/class-lbrowserc-admin-page.php';
 	new Lbrowserc_Admin_Page();

@@ -5,7 +5,7 @@ Tags: browser caching, leverage browser caching, page speed, htaccess, site spee
 Requires at least: 4.0
 Tested up to: 7.0
 Requires PHP: 5.6
-Stable tag: 3.0
+Stable tag: 3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -102,10 +102,6 @@ Get even faster load times and more advanced features with **Leverage Browser Ca
 
 == Frequently Asked Questions ==
 
-= Does this plugin work on Nginx or Windows IIS servers? =
-
-No. This plugin works exclusively on **Apache web servers** by writing directives to `.htaccess`. It has no effect on Nginx or IIS. For Nginx, caching headers must be configured at the server level.
-
 = Do I need to configure anything after activating? =
 
 No. The plugin is completely **zero-configuration**. Simply activate it and it starts working immediately.
@@ -126,6 +122,10 @@ Remaining warnings are almost always caused by third-party scripts (see above). 
 
 There is no options page — the plugin works automatically with no settings to configure.
 
+= Does this plugin work on Nginx or Windows IIS servers? =
+
+No. This plugin works exclusively on **Apache web servers** by writing directives to `.htaccess`. It has no effect on Nginx or IIS. For Nginx, caching headers must be configured at the server level.
+
 = I need support =
 
 Please open a support topic on the [WordPress.org support forum](https://wordpress.org/support/plugin/leverage-browser-caching/).
@@ -135,6 +135,10 @@ Please open a support topic on the [WordPress.org support forum](https://wordpre
 1. Browser caching rules added to .htaccess after plugin activation.
 
 == Changelog ==
+
+= 3.1 =
+* Code improvements
+* Plugin check issues fixed
 
 = 3.0 =
 * Code improvements
@@ -222,6 +226,6 @@ Please open a support topic on the [WordPress.org support forum](https://wordpre
 
 == Upgrade Notice ==
 
-= 3.0 =
+= 3.1 =
 Important update: browser caching rules are now only written to .htaccess on plugin activation and removed on deactivation. Modern MIME types added. Upgrade recommended for all users. Simply deactivate and then activate the plugin for Modern MIME types. 
 

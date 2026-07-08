@@ -9,6 +9,11 @@
  * @package Leverage Browser Caching
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 	/**
 	 * Registers and renders the LbCache admin page.
@@ -55,8 +60,8 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 			}
 
 			add_menu_page(
-				__( 'LbCache', 'lbrowserc' ),
-				__( 'LbCache', 'lbrowserc' ),
+				__( 'LbCache', 'leverage-browser-caching' ),
+				__( 'LbCache', 'leverage-browser-caching' ),
 				'manage_options',
 				'lbcache',
 				array( $this, 'render_page' ),
@@ -208,56 +213,59 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 			}
 
 			// ── Status checks ────────────────────────────────────────────
-			$htaccess_exists   = file_exists( $this->htaccess_file );
-			$htaccess_writable = $htaccess_exists && is_writable( $this->htaccess_file );
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+			global $wp_filesystem;
+
+			$htaccess_exists   = $wp_filesystem->exists( $this->htaccess_file );
+			$htaccess_writable = $htaccess_exists && $wp_filesystem->is_writable( $this->htaccess_file );
 			$caching_active    = false;
 
 			if ( $htaccess_exists ) {
-				// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-				$contents       = file_get_contents( $this->htaccess_file );
+				$contents       = $wp_filesystem->get_contents( $this->htaccess_file );
 				$caching_active = ( strpos( $contents, $this->unique_string ) !== false );
 			}
 
 			$server_software = isset( $_SERVER['SERVER_SOFTWARE'] )
 				? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) )
-				: __( 'Unknown', 'lbrowserc' );
+				: __( 'Unknown', 'leverage-browser-caching' );
 			$is_apache = ( stripos( $server_software, 'apache' ) !== false );
 
 			// ── Pro feature list ─────────────────────────────────────────
 			$pro_features = array(
-				array( 'icon' => '⚡', 'label' => __( 'GZIP / Brotli Compression', 'lbrowserc' ) ),
-				array( 'icon' => '🎨', 'label' => __( 'CSS Minification', 'lbrowserc' ) ),
-				array( 'icon' => '📜', 'label' => __( 'JavaScript Minification', 'lbrowserc' ) ),
-				array( 'icon' => '🖼️', 'label' => __( 'Image Lazy Loading', 'lbrowserc' ) ),
-				array( 'icon' => '🗜️', 'label' => __( 'HTML Minification', 'lbrowserc' ) ),
-				array( 'icon' => '🔗', 'label' => __( 'DNS Prefetch & Preconnect', 'lbrowserc' ) ),
-				array( 'icon' => '📦', 'label' => __( 'Combine CSS & JS Files', 'lbrowserc' ) ),
-				array( 'icon' => '🚀', 'label' => __( 'Critical CSS Inlining', 'lbrowserc' ) ),
-				array( 'icon' => '🛡️', 'label' => __( 'Security Headers', 'lbrowserc' ) ),
-				array( 'icon' => '📊', 'label' => __( 'Performance Dashboard', 'lbrowserc' ) ),
-				array( 'icon' => '🔄', 'label' => __( 'One-click Cache Purge', 'lbrowserc' ) ),
-				array( 'icon' => '🎯', 'label' => __( 'Priority Support', 'lbrowserc' ) ),
+				array( 'icon' => '⚡', 'label' => __( 'GZIP / Brotli Compression', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🎨', 'label' => __( 'CSS Minification', 'leverage-browser-caching' ) ),
+				array( 'icon' => '📜', 'label' => __( 'JavaScript Minification', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🖼️', 'label' => __( 'Image Lazy Loading', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🗜️', 'label' => __( 'HTML Minification', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🔗', 'label' => __( 'DNS Prefetch & Preconnect', 'leverage-browser-caching' ) ),
+				array( 'icon' => '📦', 'label' => __( 'Combine CSS & JS Files', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🚀', 'label' => __( 'Critical CSS Inlining', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🛡️', 'label' => __( 'Security Headers', 'leverage-browser-caching' ) ),
+				array( 'icon' => '📊', 'label' => __( 'Performance Dashboard', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🔄', 'label' => __( 'One-click Cache Purge', 'leverage-browser-caching' ) ),
+				array( 'icon' => '🎯', 'label' => __( 'Priority Support', 'leverage-browser-caching' ) ),
 			);
 			?>
 			<div id="lbcache-wrap">
 
 				<h1 class="lbc-title">
-					<?php esc_html_e( 'LbCache', 'lbrowserc' ); ?>
-					<span class="lbc-badge"><?php esc_html_e( 'FREE', 'lbrowserc' ); ?></span>
+					<?php esc_html_e( 'LbCache', 'leverage-browser-caching' ); ?>
+					<span class="lbc-badge"><?php esc_html_e( 'FREE', 'leverage-browser-caching' ); ?></span>
 				</h1>
-				<p class="lbc-subtitle"><?php esc_html_e( 'Leverage Browser Caching — speed up your WordPress site with zero configuration.', 'lbrowserc' ); ?></p>
+				<p class="lbc-subtitle"><?php esc_html_e( 'Leverage Browser Caching — speed up your WordPress site with zero configuration.', 'leverage-browser-caching' ); ?></p>
 
 				<!-- ── Status ─────────────────────────────────────────── -->
 				<div class="lbc-card">
-					<h2><?php esc_html_e( '📋 Plugin Status', 'lbrowserc' ); ?></h2>
+					<h2><?php esc_html_e( '📋 Plugin Status', 'leverage-browser-caching' ); ?></h2>
 					<div class="lbc-status-grid">
 
 						<div class="lbc-status-item">
 							<div class="lbc-icon"><?php echo $caching_active ? '✅' : '❌'; ?></div>
 							<div>
-								<div class="lbc-item-label"><?php esc_html_e( 'Browser Caching', 'lbrowserc' ); ?></div>
+								<div class="lbc-item-label"><?php esc_html_e( 'Browser Caching', 'leverage-browser-caching' ); ?></div>
 								<div class="lbc-item-value <?php echo $caching_active ? 'lbc-ok' : 'lbc-warn'; ?>">
-									<?php echo $caching_active ? esc_html__( 'Active', 'lbrowserc' ) : esc_html__( 'Inactive', 'lbrowserc' ); ?>
+									<?php echo $caching_active ? esc_html__( 'Active', 'leverage-browser-caching' ) : esc_html__( 'Inactive', 'leverage-browser-caching' ); ?>
 								</div>
 							</div>
 						</div>
@@ -265,9 +273,9 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 						<div class="lbc-status-item">
 							<div class="lbc-icon"><?php echo $htaccess_exists ? '✅' : '❌'; ?></div>
 							<div>
-								<div class="lbc-item-label"><?php esc_html_e( '.htaccess File', 'lbrowserc' ); ?></div>
+								<div class="lbc-item-label"><?php esc_html_e( '.htaccess File', 'leverage-browser-caching' ); ?></div>
 								<div class="lbc-item-value <?php echo $htaccess_exists ? 'lbc-ok' : 'lbc-warn'; ?>">
-									<?php echo $htaccess_exists ? esc_html__( 'Found', 'lbrowserc' ) : esc_html__( 'Not Found', 'lbrowserc' ); ?>
+									<?php echo $htaccess_exists ? esc_html__( 'Found', 'leverage-browser-caching' ) : esc_html__( 'Not Found', 'leverage-browser-caching' ); ?>
 								</div>
 							</div>
 						</div>
@@ -275,9 +283,9 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 						<div class="lbc-status-item">
 							<div class="lbc-icon"><?php echo $htaccess_writable ? '✅' : '❌'; ?></div>
 							<div>
-								<div class="lbc-item-label"><?php esc_html_e( '.htaccess Writable', 'lbrowserc' ); ?></div>
+								<div class="lbc-item-label"><?php esc_html_e( '.htaccess Writable', 'leverage-browser-caching' ); ?></div>
 								<div class="lbc-item-value <?php echo $htaccess_writable ? 'lbc-ok' : 'lbc-warn'; ?>">
-									<?php echo $htaccess_writable ? esc_html__( 'Yes', 'lbrowserc' ) : esc_html__( 'No', 'lbrowserc' ); ?>
+									<?php echo $htaccess_writable ? esc_html__( 'Yes', 'leverage-browser-caching' ) : esc_html__( 'No', 'leverage-browser-caching' ); ?>
 								</div>
 							</div>
 						</div>
@@ -285,7 +293,7 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 						<div class="lbc-status-item">
 							<div class="lbc-icon"><?php echo $is_apache ? '✅' : '⚠️'; ?></div>
 							<div>
-								<div class="lbc-item-label"><?php esc_html_e( 'Web Server', 'lbrowserc' ); ?></div>
+								<div class="lbc-item-label"><?php esc_html_e( 'Web Server', 'leverage-browser-caching' ); ?></div>
 								<div class="lbc-item-value <?php echo $is_apache ? 'lbc-ok' : 'lbc-warn'; ?>">
 									<?php echo esc_html( $server_software ); ?>
 								</div>
@@ -295,7 +303,7 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 						<div class="lbc-status-item">
 							<div class="lbc-icon">🔌</div>
 							<div>
-								<div class="lbc-item-label"><?php esc_html_e( 'Plugin Version', 'lbrowserc' ); ?></div>
+								<div class="lbc-item-label"><?php esc_html_e( 'Plugin Version', 'leverage-browser-caching' ); ?></div>
 								<div class="lbc-item-value">
 									<?php
 									$plugin_data = get_plugin_data( LBROWSERC_FILE );
@@ -308,7 +316,7 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 						<div class="lbc-status-item">
 							<div class="lbc-icon">🌐</div>
 							<div>
-								<div class="lbc-item-label"><?php esc_html_e( 'PHP Version', 'lbrowserc' ); ?></div>
+								<div class="lbc-item-label"><?php esc_html_e( 'PHP Version', 'leverage-browser-caching' ); ?></div>
 								<div class="lbc-item-value"><?php echo esc_html( PHP_VERSION ); ?></div>
 							</div>
 						</div>
@@ -318,7 +326,7 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 
 				<!-- ── Pro Features ───────────────────────────────────── -->
 				<div class="lbc-card">
-					<h2><?php esc_html_e( '🔒 Pro Features — Not Available in Free', 'lbrowserc' ); ?></h2>
+					<h2><?php esc_html_e( '🔒 Pro Features — Not Available in Free', 'leverage-browser-caching' ); ?></h2>
 					<div class="lbc-features-grid">
 						<?php foreach ( $pro_features as $feature ) : ?>
 							<div class="lbc-feature-item">
@@ -328,18 +336,18 @@ if ( ! class_exists( 'Lbrowserc_Admin_Page' ) ) {
 						<?php endforeach; ?>
 					</div>
 
-                    <p style="text-align: center;font-size: 16px;padding-top: 14px;">... <?php esc_html_e( 'and much more', 'lbrowserc' ); ?> ❤️ !</p>
+                    <p style="text-align: center;font-size: 16px;padding-top: 14px;">... <?php esc_html_e( 'and much more', 'leverage-browser-caching' ); ?> ❤️ !</p>
 
 				</div><!-- .lbc-card -->
 
 				<!-- ── Upgrade CTA ────────────────────────────────────── -->
 				<div class="lbc-cta">
 					<div>
-						<h2><?php esc_html_e( '⭐ Unlock the Full Power of Leverage Browser Caching PRO', 'lbrowserc' ); ?></h2>
-						<p><?php esc_html_e( 'Get GZIP compression, CSS/JS minification, lazy loading, HTML minification, and much more — all in one plugin. Boost your PageSpeed score to 100.', 'lbrowserc' ); ?></p>
+						<h2><?php esc_html_e( '⭐ Unlock the Full Power of Leverage Browser Caching PRO', 'leverage-browser-caching' ); ?></h2>
+						<p><?php esc_html_e( 'Get GZIP compression, CSS/JS minification, lazy loading, HTML minification, and much more — all in one plugin. Boost your PageSpeed score to 100.', 'leverage-browser-caching' ); ?></p>
 					</div>
 					<a href="<?php echo esc_url( $this->upgrade_url ); ?>" target="_blank" rel="noopener noreferrer" class="lbc-cta-btn">
-						<?php esc_html_e( '⭐ Upgrade to Pro', 'lbrowserc' ); ?>
+						<?php esc_html_e( '⭐ Upgrade to Pro', 'leverage-browser-caching' ); ?>
 					</a>
 				</div>
 

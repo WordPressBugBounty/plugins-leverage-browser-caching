@@ -5,6 +5,11 @@
  * @package 	Leverage Browser Caching
  */
 
+// Exit if accessed directly.
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if ( ! class_exists( 'Lbrowserc_Core' ) ) {
 	/**
 	 * Core class of plugin.
@@ -39,14 +44,29 @@ if ( ! class_exists( 'Lbrowserc_Core' ) ) {
 		 * Displays admin notices when .htaccess is missing or not accessible.
 		 */
 		public function admin_notices() {
-			if ( ! file_exists( $this->htaccess_file ) ) {
+			if ( ! current_user_can( 'manage_options' ) ) {
+				return;
+			}
+
+			$server_software = isset( $_SERVER['SERVER_SOFTWARE'] ) ? sanitize_text_field( wp_unslash( $_SERVER['SERVER_SOFTWARE'] ) ) : '';
+			$is_apache       = ( stripos( $server_software, 'apache' ) !== false );
+
+			if ( ! $is_apache ) {
+				return;
+			}
+
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+			global $wp_filesystem;
+
+			if ( ! $wp_filesystem->exists( $this->htaccess_file ) ) {
 				$message  = '<div class="notice notice-error"><p>';
-				$message .= __( 'Plugin Leverage Browser Caching: .htaccess file not found. This plugin works only for Apache server. If you are using Apache server, please create it.', 'lbrowserc' );
+				$message .= __( 'Plugin Leverage Browser Caching: .htaccess file not found. This plugin works only for Apache server. If you are using Apache server, please create it.', 'leverage-browser-caching' );
 				$message .= '</p></div>';
 				echo wp_kses_post( $message );
-			} elseif ( ! is_readable( $this->htaccess_file ) || ! is_writable( $this->htaccess_file ) ) {
+			} elseif ( ! $wp_filesystem->is_readable( $this->htaccess_file ) || ! $wp_filesystem->is_writable( $this->htaccess_file ) ) {
 				$message  = '<div class="notice notice-error"><p>';
-				$message .= __( 'Plugin Leverage Browser Caching: .htaccess file is not readable or writable. Please change the file permissions.', 'lbrowserc' );
+				$message .= __( 'Plugin Leverage Browser Caching: .htaccess file is not readable or writable. Please change the file permissions.', 'leverage-browser-caching' );
 				$message .= '</p></div>';
 				echo wp_kses_post( $message );
 			}
@@ -62,26 +82,30 @@ if ( ! class_exists( 'Lbrowserc_Core' ) ) {
 				return;
 			}
 
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+			global $wp_filesystem;
+
 			// Bail if .htaccess does not exist.
-			if ( ! file_exists( $this->htaccess_file ) ) {
+			if ( ! $wp_filesystem->exists( $this->htaccess_file ) ) {
 				return;
 			}
 
 			// Bail if .htaccess is not readable or writable.
-			if ( ! is_readable( $this->htaccess_file ) || ! is_writable( $this->htaccess_file ) ) {
+			if ( ! $wp_filesystem->is_readable( $this->htaccess_file ) || ! $wp_filesystem->is_writable( $this->htaccess_file ) ) {
 				return;
 			}
 
-			$htaccess_cntn = file_get_contents( $this->htaccess_file );
+			$htaccess_cntn = $wp_filesystem->get_contents( $this->htaccess_file );
 
 			// Do nothing if the plugin block is already present.
 			if ( strpos( $htaccess_cntn, $this->unique_string ) !== false ) {
 				return;
 			}
 
-			// Append the caching block and write back with file locking.
+			// Append the caching block and write back.
 			$htaccess_cntn .= $this->code_to_add();
-			file_put_contents( $this->htaccess_file, $htaccess_cntn, LOCK_EX );
+			$wp_filesystem->put_contents( $this->htaccess_file, $htaccess_cntn, FS_CHMOD_FILE );
 		}
 
 		/**
@@ -89,17 +113,21 @@ if ( ! class_exists( 'Lbrowserc_Core' ) ) {
 		 * Called via register_deactivation_hook().
 		 */
 		public function remove_code() {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+			WP_Filesystem();
+			global $wp_filesystem;
+
 			// Bail if .htaccess does not exist.
-			if ( ! file_exists( $this->htaccess_file ) ) {
+			if ( ! $wp_filesystem->exists( $this->htaccess_file ) ) {
 				return;
 			}
 
 			// Bail if .htaccess is not readable or writable.
-			if ( ! is_readable( $this->htaccess_file ) || ! is_writable( $this->htaccess_file ) ) {
+			if ( ! $wp_filesystem->is_readable( $this->htaccess_file ) || ! $wp_filesystem->is_writable( $this->htaccess_file ) ) {
 				return;
 			}
 
-			$htaccess_cntn = file_get_contents( $this->htaccess_file );
+			$htaccess_cntn = $wp_filesystem->get_contents( $this->htaccess_file );
 
 			// Do nothing if the plugin block is not present.
 			if ( strpos( $htaccess_cntn, $this->unique_string ) === false ) {
@@ -114,7 +142,7 @@ if ( ! class_exists( 'Lbrowserc_Core' ) ) {
 			// without touching intentional formatting elsewhere in the file.
 			$htaccess_cntn = preg_replace( '/\n{3,}/', "\n\n", $htaccess_cntn );
 
-			file_put_contents( $this->htaccess_file, $htaccess_cntn, LOCK_EX );
+			$wp_filesystem->put_contents( $this->htaccess_file, $htaccess_cntn, FS_CHMOD_FILE );
 		}
 
 		/**
